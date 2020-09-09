@@ -11,6 +11,7 @@
     <define name="LOW_NOISE_TIME" value="10"/>
 
     <target name="ap" board="chimera_1.0">
+      <subsystem name="fdm" type="rover">
     </target>
 
     <module name="radio_control" type="datalink">

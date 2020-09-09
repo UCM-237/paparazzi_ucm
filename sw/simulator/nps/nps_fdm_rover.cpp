@@ -21,16 +21,16 @@
 
 /**
  * @file nps_fdm_rover.cpp
- * Flight Dynamics Model (FDM) for NPS using JSBSim.
+ * Flight Dynamics Model (FDM) for NPS.
  *
- * This is an FDM for NPS that uses JSBSim as the simulation engine.
+ * This is an FDM for NPS for the rovers.
  */
 
 #include <iostream>
 #include <stdlib.h>
 #include <stdio.h>
 
-// ignore stupid warnings in JSBSim
+// ignore stupid warnings
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 
@@ -50,7 +50,7 @@
 #include <models/propulsion/FGThruster.h>
 #include <models/propulsion/FGPropeller.h>
 
-// end ignore unused param warnings in JSBSim
+// end ignore unused param warnings
 #pragma GCC diagnostic pop
 
 #include "nps_autopilot.h"
