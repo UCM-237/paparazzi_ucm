@@ -10,7 +10,7 @@
     <define name="LOW_NOISE_THRESHOLD" value="3500"/>
     <define name="LOW_NOISE_TIME" value="10"/>
 
-    <target name="ap" board="chimera_1.0">
+    <target name="nps" board="pc">
       <subsystem name="fdm" type="rover">
     </target>
 
