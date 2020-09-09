@@ -271,9 +271,16 @@ void nps_fdm_run_step(bool launch __attribute__((unused)), double *commands, int
 
 void nps_fdm_set_wind(double speed, double dir)
 {
+  /*
   FGWinds *Winds = FDMExec->GetWinds();
   Winds->SetWindspeed(FeetOfMeters(speed));
   Winds->SetWindPsi(dir);
+  */
+
+  FGWinds *Winds = FDMExec->GetWinds();
+  Winds->SetWindspeed(FeetOfMeters(1.0));
+  Winds->SetWindPsi(1.0);
+  
 }
 
 void nps_fdm_set_wind_ned(double wind_north, double wind_east, double wind_down)
