@@ -10,8 +10,11 @@
     <define name="LOW_NOISE_THRESHOLD" value="3500"/>
     <define name="LOW_NOISE_TIME" value="10"/>
 
+    <target name="ap" board="chimera_1.0">
+    </target>
+
     <target name="nps" board="pc">
-      <subsystem name="fdm" type="rover">
+      <subsystem name="fdm" type="jsbsim">
     </target>
 
     <module name="radio_control" type="datalink">
