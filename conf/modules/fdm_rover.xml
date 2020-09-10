@@ -39,6 +39,6 @@
       nps.CFLAGS  += -DNPS_JSBSIM_USE_SGPATH=$(JSBSIM_USE_SGPATH)
       endif
     </raw>
-    <file name="nps_fdm_jsbsim.cpp" dir="nps"/>
+    <file name="nps_fdm_rover.cpp" dir="nps"/>
   </makefile>
 </module>
