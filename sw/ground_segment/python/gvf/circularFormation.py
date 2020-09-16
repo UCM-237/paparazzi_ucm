@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 # Copyright (C) 2017 Hector Garcia de Marina <hgdemarina@gmail.com>
 #                    Gautier Hattenberger <gautier.hattenberger@enac.fr>
@@ -80,8 +80,8 @@ class FormationControl:
                         ac.b_index = index
                 except Exception as e:
                     print(e)
-                    print(setting_ + " setting not found, \
-                            have you forgotten to check gvf.xml for your settings?")
+                    print((setting_ + " setting not found, \
+                            have you forgotten to check gvf.xml for your settings?"))
 
 
         # Start IVY interface
@@ -127,7 +127,7 @@ class FormationControl:
         for ac in self.aircraft:
             if (not ac.initialized_nav) or (not ac.initialized_gvf):
                 if self.verbose:
-                    print("Waiting for state of aircraft ", ac.id)
+                    print(("Waiting for state of aircraft ", ac.id))
                 ready = False
 
         if not ready:
@@ -158,7 +158,7 @@ class FormationControl:
         u = -self.aircraft[0].s*self.k*self.B.dot(error_sigma)
 
         if self.verbose:
-            print("Inter-vehicle errors: ", str(error_sigma*180.0/np.pi).replace('[','').replace(']',''))
+            print(("Inter-vehicle errors: ", str(error_sigma*180.0/np.pi).replace('[','').replace(']','')))
 
         i = 0
         for ac in self.aircraft:
@@ -201,7 +201,7 @@ if __name__ == '__main__':
     with open(args.config_file, 'r') as f:
         conf = json.load(f)
         if args.verbose:
-            print(json.dumps(conf))
+            print((json.dumps(conf)))
 
         fc = FormationControl(conf, freq=args.freq, verbose=args.verbose)
         fc.run()
