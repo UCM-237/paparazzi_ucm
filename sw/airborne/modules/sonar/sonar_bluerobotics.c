@@ -71,11 +71,11 @@ extern void sonar_init(void)
 
 
 /* Send message to serial port (byte by byte) */
-void sonar_send_msg(uint8_t msg[])
+static void sonar_send_msg(uint8_t msg[])
 {
   uint8_t i = 0;
   while (msg[i]) {
-  uart_put_byte(&(SONAR_DEV), 0, msg[i]);
+  uart_put_byte(&(SONAR_DEV), 0, msg[is]);
   i++;
   }
 }
@@ -98,4 +98,10 @@ void sonar_event(void)
   
   // Testing printf
   printf("Message from sonar: %s", sonar_msg.msg);
+}
+
+// Send ping message
+void sonar_ping(void)
+{
+    sonar_send_msg(request_protocol_version);
 }
