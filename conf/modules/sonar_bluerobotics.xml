@@ -13,7 +13,7 @@
   <settings>
     <dl_settings>
       <dl_settings NAME="BR_Sonar">
-        <dl_setting MAX="1" MIN="0" STEP="1" VAR="sonar_stream_setting" shortname="stream" module="modules/sonar/sonar_bluerobotics" handler="stream" values="FALSE|TRUE"/>
+        <dl_setting MAX="1" MIN="0" STEP="1" VAR="sonar_stream_setting" shortname="stream" module="modules/sonar/sonar_bluerobotics" values="FALSE|TRUE"/>
       </dl_settings>
     </dl_settings>
   </settings>

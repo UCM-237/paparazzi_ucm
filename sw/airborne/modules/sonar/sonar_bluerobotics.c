@@ -33,6 +33,7 @@
 #define SONAR_MAX_LEN 4096  // Es el tamaño del buffer que setea el servidor en python (mandamos strings)
 
 char buffer[SONAR_MAX_LEN]; // tmp buffer
+bool sonar_stream_setting;
 
 // Sonar message structure
 struct sonar_msg_t{
@@ -75,7 +76,7 @@ static void sonar_send_msg(uint8_t msg[])
 {
   uint8_t i = 0;
   while (msg[i]) {
-  uart_put_byte(&(SONAR_DEV), 0, msg[is]);
+  uart_put_byte(&(SONAR_DEV), 0, msg[i]);
   i++;
   }
 }
