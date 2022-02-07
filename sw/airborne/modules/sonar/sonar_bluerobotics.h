@@ -52,4 +52,6 @@ extern void sonar_event(void);
 // Variable to start/stop requesting
 extern bool sonar_stream_setting;
 
+#define LENGTH(x)  (sizeof(x) / sizeof(*x))
+
 #endif

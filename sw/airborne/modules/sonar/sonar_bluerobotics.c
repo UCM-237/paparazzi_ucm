@@ -75,9 +75,8 @@ extern void sonar_init(void)
 static void sonar_send_msg(uint8_t msg[])
 {
   uint8_t i = 0;
-  while (msg[i]) {
-  uart_put_byte(&(SONAR_DEV), 0, msg[i]);
-  i++;
+  for (i = 0; i < LENGTH(msg); i++) {
+    uart_put_byte(&(SONAR_DEV), 0, msg[i]);
   }
 }
 
