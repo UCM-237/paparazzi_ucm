@@ -25,83 +25,154 @@
 
 #include "modules/sonar/sonar_bluerobotics.h"
 
-#include "std.h" 
-#include "mcu_periph/uart.h"
+#include "generated/airframe.h"
+#include "modules/datalink/telemetry.h"
+#include "autopilot.h"
+#include "navigation.h"
+#include "state.h"
+
+#include "std.h"
 #include <stdio.h>
-#include <string.h>
 
-#define SONAR_MAX_LEN 4096  // Es el tamaño del buffer que setea el servidor en python (mandamos strings)
-
-char buffer[SONAR_MAX_LEN]; // tmp buffer
 bool sonar_stream_setting;
 
-// Sonar message structure
-struct sonar_msg_t{
-  int len;
-  char msg[SONAR_MAX_LEN];
-};
+struct sonar_parse_t br_sonar;
 
-struct sonar_msg_t sonar_msg;
+// Sonar msg header bytes (and checksum)
+static uint8_t headerLength = 8;
+static uint8_t checksumLength = 2;
 
-// Test request message: (general_request#6--> common_protocol_version#5)
+static uint8_t SONAR_START1_BYTE = 0x42;
+static uint8_t SONAR_START2_BYTE = 0x52;
+
+// Sonar parse states
+#define BR_INIT 0
+#define BR_SYNC1 1
+#define BR_SYNC2 2
+#define BR_PAYLOAD_LEN1 3
+#define BR_PAYLOAD_LEN2 4
+#define BR_MSG_ID1 5
+#define BR_MSG_ID2 6
+#define BR_SRC_ID 7
+#define BR_DEV_ID 8
+#define BR_PAYLOAD 9
+#define BR_CHECKSUM1 10
+
+// Testing variable
+uint8_t checksum;
+
+// Test request message: (general_request#6 --> common_protocol_version#5)
 static uint8_t request_protocol_version[12] = { 
         0x42, //  0: "B"
         0x52, //  1: "R"
-        4,    //  2: 4_L payload length |
-        0,    //  3: 0_H                |
-        6,    //  4: 6_L message ID |
-        0,    //  5: 0_H            |
-        0,    //  6: source ID
-        0,    //  7: device ID
-        5,    //  8: 5_L requested message ID |
-        0,    //  9: 0_H                      |
+        0x02, //  2: 2_L payload length |
+        0x00, //  3: 0_H                |
+        0x06, //  4: 6_L message ID |
+        0x00, //  5: 0_H            |
+        0x00, //  6: source ID
+        0x00, //  7: device ID
+        0x05, //  8: 5_L requested message ID |
+        0x00, //  9: 0_H                      |
         0xA1, // 10: 161_L message checksum (sum of all non-checksum bytes) |
         0x00  // 11: 0_H                                                    |
 };
 
-/* Initialize decoder */
-extern void sonar_init(void)
-{
-  sonar_stream_setting = true;
+// Test request message: (general_request#6 --> distance_simple#1211)
+static uint8_t request_simple_distance[12] = { 
+        0x42, //  0: "B"
+        0x52, //  1: "R"
+        0x02, //  2: 2_L payload length |
+        0x00, //  3: 0_H                |
+        0x06, //  4: 6_L message ID |
+        0x00, //  5: 0_H            |
+        0x00, //  6: source ID
+        0x01, //  7: device ID
+        0xBB, //  8: 5_L requested message ID |
+        0x04, //  9: 0_H                      |
+        0x5C, // 10: 161_L message checksum (sum of all non-checksum bytes) |
+        0x01  // 11: 0_H                                                    |
+};
 
-  sonar_msg.len = 0;
-  memset(sonar_msg.msg, 0, SONAR_MAX_LEN); // clean the strings
-  memset(buffer, 0, SONAR_MAX_LEN); 
-  
+
+/* Initialize decoder */
+void sonar_init(void)
+{ 
+  br_sonar.status = BR_INIT;
+  br_sonar.msg_available = false;
+
+  sonar_stream_setting = true;
+  checksum = 0;
 }
 
+/* Telemetry functions */
+static void send_telemetry(struct transport_tx *trans, struct link_device *dev){
+  pprz_msg_send_INFO_MSG(trans, dev, AC_ID, &checksum);
+}
+
+static void sonar_report(void){
+  register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_INFO_MSG, send_telemetry);
+}
 
 /* Send message to serial port (byte by byte) */
-static void sonar_send_msg(uint8_t msg[])
+static void sonar_send_msg(uint8_t len, uint8_t *bytes)
 {
-  uint8_t i = 0;
-  for (i = 0; i < LENGTH(msg); i++) {
-    uart_put_byte(&(SONAR_DEV), 0, msg[i]);
+  struct link_device *dev = &((SONAR_DEV).device);
+
+  int i = 0;
+  for (i = 0; i < len; i++) {
+    dev->put_byte(dev->periph, 0, bytes[i]);
   }
+
+  br_sonar.msg_available = false;
+  sonar_report();
 }
 
 
-/* Message parsing */
+/* Message parsing functions */
+static uint32_t msgLength(void){
+  return headerLength + br_sonar.payload_len + checksumLength;
+};
+
+static uint32_t calculateChecksum(void){
+  uint32_t i = 0;
+  uint32_t non_ck_len = msgLength() - checksumLength;
+  br_sonar.ck = 0;
+
+  for(i = 0; i < non_ck_len; i++) {
+    br_sonar.ck += br_sonar.msgData[i];
+  }
+
+  return br_sonar.ck;
+};
+
+static void sonar_parse(uint8_t byte){checksum += byte;};
+
+/*
 // To hexadecimal string for testing
 static void dummy_sonar_parse(struct sonar_msg_t *BR_msg, uint8_t byte)
 	{
 	  BR_msg->len += sprintf(BR_msg->msg + BR_msg->len, "0x%02X ", byte);
 	}
+*/
 
 /* Look for data on serial port and send to parser */
+/* TODO: (and send msg if it is available) */
 void sonar_event(void)
 {
-  while(uart_char_available(&(SONAR_DEV))) {
-    uint8_t byte = uart_getch(&(SONAR_DEV));
-    dummy_sonar_parse(&sonar_msg, byte);
-  }
-  
-  // Testing printf
-  printf("Message from sonar: %s", sonar_msg.msg);
+  struct link_device *dev = &((SONAR_DEV).device);
+
+  while (dev->char_available(dev->periph)) {
+    sonar_parse(dev->get_byte(dev->periph));
+    /*if (sonar.msg_available) {
+      sonar_send_msg();
+    };*/
+    }
+
+  sonar_report();
 }
 
 // Send ping message
 void sonar_ping(void)
-{
-    sonar_send_msg(request_protocol_version);
+{   
+    sonar_send_msg(12, request_protocol_version);
 }

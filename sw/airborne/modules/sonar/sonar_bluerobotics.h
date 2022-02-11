@@ -26,32 +26,63 @@
 
 #include "std.h"
 
-/* TODO: BLUEROBOTICS SONAR messages IDs */
+/* Parser msg struct */
+#define SONAR_MAX_PAYLOAD 256
+struct sonar_parse_t {
+  uint16_t payload_len;
+  uint16_t msg_id;
+  uint8_t src_id;
+  uint8_t dev_id;
 
-/* Message structure 
- * We need this structure because the array that we use
- * contains both u8 (1 Byte) and u16 (2 Bytes) fields.
- 
-struct sonar_msg{
-    enum { is_u8, is_u16} type;
-    union {
-        uint8_t u8val;
-        uint16_t u16val;
-    } val;
+  uint8_t msgData[SONAR_MAX_PAYLOAD] __attribute__((aligned));
+  uint8_t status;
+  
+  uint8_t ck;
+  bool msg_available;
 };
 
-// Test messages
-extern struct sonar_msg sonar_ping_protocol;
-*/
+extern struct sonar_parse_t br_sonar;
 
-/* External functions (called by the state machine)*/
-extern void sonar_init(void);
-extern void sonar_ping(void);
-extern void sonar_event(void);
+/* TODO: BLUEROBOTICS SONAR messages IDs */
+// Common
+#define BR_PROTOCOL_VERSION 5
+#define BR_REQUEST 6
+
+// BR Ping 1D
+#define BR_SET_DEVICE_ID 1000
+#define BR_DEVICE_ID 1201
+#define BR_DISTANCE_SIMPLE 1211
 
 // Variable to start/stop requesting
 extern bool sonar_stream_setting;
 
-#define LENGTH(x)  (sizeof(x) / sizeof(*x))
+/* Testing zone */
+extern uint8_t checksum; // Telemetry testing variable
+
+
+/* Message structure 
+struct SonarMsg {
+  uint8_t start1;
+  uint8_t start2;
+  uint8_t payloadLen_L;
+  uint8_t payloadLen_H;
+  uint8_t msgId_L;
+  uint8_t msgId_H;
+  uint8_t srcID;
+  uint8_t devID;
+
+  uint8_t payload[SONAR_MAX_PAYLOAD] __attribute__((aligned));
+
+  uint8_t checksum_L;
+  uint8_t checksum_H;
+};*/
+
+/* External functions (called by the autopilot)*/
+#include "pprzlink/pprzlink_device.h"
+#include "mcu_periph/uart.h"
+
+extern void sonar_init(void);
+extern void sonar_ping(void);
+extern void sonar_event(void);
 
 #endif
