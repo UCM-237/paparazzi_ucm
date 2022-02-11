@@ -86,9 +86,9 @@ static uint8_t request_simple_distance[12] = {
         0x06, //  4: 6_L message ID |
         0x00, //  5: 0_H            |
         0x00, //  6: source ID
-        0x01, //  7: device ID
-        0xBB, //  8: 5_L requested message ID |
-        0x04, //  9: 0_H                      |
+        0x00, //  7: device ID
+        0xBB, //  8: BB_L requested message ID |
+        0x04, //  9: 4_H                      |
         0x5C, // 10: 161_L message checksum (sum of all non-checksum bytes) |
         0x01  // 11: 0_H                                                    |
 };
