@@ -17,9 +17,12 @@
  * along with paparazzi; see the file COPYING.  If not, see
  * <http://www.gnu.org/licenses/>.
  */
-/**
+/*
  * @file "modules/sensors/sonar/sonar_bluerobotics.c"
- * @author Jesús Bautista Villar
+ * @authors Jesús Bautista Villar
+ *          Juan Francisco Jiménez Castellanos
+ *          Lía García Pérez
+ *          Hector Garcia de Marina
  * 
  */
 
@@ -34,16 +37,16 @@
 #include "std.h"
 #include <stdio.h>
 
-bool sonar_stream_setting;
-
 struct sonar_parse_t br_sonar;
+
+bool sonar_stream_setting;
 
 // Sonar msg header bytes (and checksum)
 static uint8_t headerLength = 8;
 static uint8_t checksumLength = 2;
 
-static uint8_t SONAR_START1_BYTE = 0x42;
-static uint8_t SONAR_START2_BYTE = 0x52;
+static uint8_t SONAR_START1_BYTE = 0x42; // "B"
+static uint8_t SONAR_START2_BYTE = 0x52; // "R"
 
 // Sonar parse states
 #define BR_INIT 0
@@ -59,8 +62,9 @@ static uint8_t SONAR_START2_BYTE = 0x52;
 #define BR_CHECKSUM1 10
 
 // Testing variable
-uint8_t checksum;
+uint8_t checksum_test;
 
+/* TODO: Revisar que estos mensajes son correctos y que el sonar responde a ellos */
 // Test request message: (general_request#6 --> common_protocol_version#5)
 static uint8_t request_protocol_version[12] = { 
         0x42, //  0: "B"
@@ -104,9 +108,9 @@ void sonar_init(void)
   checksum = 0;
 }
 
-/* Telemetry functions */
+/* Telemetry functions (TESTING TELEMETRY) */
 static void send_telemetry(struct transport_tx *trans, struct link_device *dev){
-  pprz_msg_send_INFO_MSG(trans, dev, AC_ID, &checksum);
+  pprz_msg_send_INFO_MSG(trans, dev, AC_ID, &checksum_test);
 }
 
 static void sonar_report(void){
@@ -145,7 +149,8 @@ static uint32_t calculateChecksum(void){
   return br_sonar.ck;
 };
 
-static void sonar_parse(uint8_t byte){checksum += byte;};
+/* TODO: Diseñar el parser basado en GPS ublox y el código de Lia */
+static void sonar_parse(uint8_t byte){checksum_test;}; // ¡¡TESTING PARSER!!
 
 /*
 // To hexadecimal string for testing
@@ -155,8 +160,10 @@ static void dummy_sonar_parse(struct sonar_msg_t *BR_msg, uint8_t byte)
 	}
 */
 
+
+// -- EXTERNAL FUNCTIONS -- // (callable from modules and/or autopilot) //
 /* Look for data on serial port and send to parser */
-/* TODO: (and send msg if it is available) */
+/* TODO: (mandar también un mensaje si este está disponible) */
 void sonar_event(void)
 {
   struct link_device *dev = &((SONAR_DEV).device);
@@ -166,9 +173,9 @@ void sonar_event(void)
     /*if (sonar.msg_available) {
       sonar_send_msg();
     };*/
+    sonar_report();
     }
-
-  sonar_report();
+  //sonar_report();
 }
 
 // Send ping message

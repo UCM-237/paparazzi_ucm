@@ -17,7 +17,10 @@
  */
 /*
  * @file "modules/sensors/sonar/sonar_bluerobotics.c"
- * @author Jesús Bautista Villar
+ * @authors Jesús Bautista Villar
+ *          Juan Francisco Jiménez Castellanos
+ *          Lía García Pérez
+ *          Hector Garcia de Marina
  * 
  */
  
@@ -26,8 +29,34 @@
 
 #include "std.h"
 
+#include "pprzlink/pprzlink_device.h"
+#include "mcu_periph/uart.h"
+
+/* Parser variables */
+/* TODO: Tener una pequeña librería en el .h con todas las IDs que vamos a usar.
+         Lo ideal sería construir un parser que fuera capaz de leer cualquier mensaje.
+         Se puede diseñar el parse de forma general como una máquina de estados, así lo
+         hacen en el módulo de GPS de ublox. Tenemos mucho código de refrencia si pocedemos
+         de esto modo, pienso que nos será bastante más sencillo. */
+
+// Common IDs
+#define BR_PROTOCOL_VERSION 5
+#define BR_REQUEST 6
+
+// Ping1D IDs
+#define BR_SET_DEVICE_ID 1000
+#define BR_DEVICE_ID 1201
+#define BR_DISTANCE_SIMPLE 1211
+
+// Variable to start/stop requesting stream
+extern bool sonar_stream_setting;
+
+/* Testing variables */
+extern uint8_t checksum; // Telemetry testing variable
+
 /* Parser msg struct */
 #define SONAR_MAX_PAYLOAD 256
+
 struct sonar_parse_t {
   uint16_t payload_len;
   uint16_t msg_id;
@@ -37,30 +66,13 @@ struct sonar_parse_t {
   uint8_t msgData[SONAR_MAX_PAYLOAD] __attribute__((aligned));
   uint8_t status;
   
-  uint8_t ck;
+  uint16_t ck;
   bool msg_available;
 };
 
 extern struct sonar_parse_t br_sonar;
 
-/* TODO: BLUEROBOTICS SONAR messages IDs */
-// Common
-#define BR_PROTOCOL_VERSION 5
-#define BR_REQUEST 6
-
-// BR Ping 1D
-#define BR_SET_DEVICE_ID 1000
-#define BR_DEVICE_ID 1201
-#define BR_DISTANCE_SIMPLE 1211
-
-// Variable to start/stop requesting
-extern bool sonar_stream_setting;
-
-/* Testing zone */
-extern uint8_t checksum; // Telemetry testing variable
-
-
-/* Message structure 
+/* Message structure (information) 
 struct SonarMsg {
   uint8_t start1;
   uint8_t start2;
@@ -78,11 +90,8 @@ struct SonarMsg {
 };*/
 
 /* External functions (called by the autopilot)*/
-#include "pprzlink/pprzlink_device.h"
-#include "mcu_periph/uart.h"
-
 extern void sonar_init(void);
 extern void sonar_ping(void);
 extern void sonar_event(void);
 
-#endif
+#endif //SONAR_BLUEROBOTICS_H
